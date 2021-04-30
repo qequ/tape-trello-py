@@ -1,6 +1,7 @@
-from trello import TrelloClient
 import json
+from random import randint
 from parsers import parse_list_to_dict
+from trello import TrelloClient
 
 
 class Error(Exception):
@@ -55,3 +56,35 @@ class TrelloToTape(object):
 
         with open("tape_trelloimport_{}.txt".format(id_stamp), "w") as outf:
             outf.write(json.dumps(json_dict, indent=4))
+
+
+class TapetoTrello():
+    """
+    The main class for the API between Tape to Trello functions.
+    """
+
+    def __init__(self, api_key, api_secret):
+        self.client = TrelloClient(api_key=api_key, api_secret=api_secret)
+
+    def export_txt_to_trello(self, filepath='', board_name="TapeBoard"+str(randint(1, 25**4))):
+        """
+        Given the path to the .txt tape savefile and a name of the new board
+        it creates a new board on trello
+        """
+        with open(filepath) as tape_file:
+            tape_str = tape_file.read()
+
+        json_tape = json.loads(tape_str)
+
+        new_board = self.client.add_board(board_name)
+
+        for k in json_tape:
+            # creates lists of the new board
+            new_list = new_board.add_list(json_tape[k]["name"])
+
+            # creates the cards of the new list
+            list_cards = json_tape[k]["items"]
+
+            for json_card in list_cards:
+                new_list.add_card(
+                    json_card["name"], desc="State: {}".format(json_card["state"].capitalize()))
