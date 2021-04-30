@@ -2,7 +2,7 @@ def parse_card_to_dict(card):
     """
     Takes a card object and returns a dict with id, name and state
     """
-    return {"id": card.id, "name": card.name, "state": ""}
+    return {"id": card.id, "name": card.name, "state": "", "description": card.desc}
 
 
 def parse_list_to_dict(list):

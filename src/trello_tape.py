@@ -1,12 +1,25 @@
 from trello import TrelloClient
 import json
-from random import randint
-from parsers import *
+from parsers import parse_list_to_dict
+
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+    pass
+
+
+class SearchError(Error):
+    """
+    Exception raised for errors trying to find a value
+    """
+
+    def __init__(self, message):
+        self.message = message
 
 
 class TrelloToTape(object):
     """
-    The main class for the API between Trello and Tape.
+    The main class for the API between Trello to Tape functions.
     The __init__ function takes the api_key and the api_secret.
     There is no Auth needed.
 
@@ -29,16 +42,16 @@ class TrelloToTape(object):
                 board_wanted = b
                 break
 
+        if board_wanted is None:
+            raise SearchError("Couldn't find {} board".format(board_name))
+
         board_obj = self.client.get_board(b.id)
 
         json_dict = {}
-
+        id_stamp = b.id
         for l in board_obj.all_lists():
-            json_dict[str(l.name) + str(randint(10 ** 6, 10 ** 7))
+            json_dict[str(l.name) + str(id_stamp)
                       ] = parse_list_to_dict(l)
 
-        outf = open("tape_export{}.txt".format(randint(10 ** 6, 10 ** 7)), "w")
-        print("writing the file...")
-        outf.write(json.dumps(json_dict, indent=4))
-
-        outf.close()
+        with open("tape_trelloimport_{}.txt".format(id_stamp), "w") as outf:
+            outf.write(json.dumps(json_dict, indent=4))
